@@ -1,0 +1,28 @@
+[Unit]
+Description=procbeat 服务器指标监控（CPU / 内存 / 负载 / 磁盘）
+Documentation=file:///home/admin/workspace/monitor/README.md file:///home/admin/workspace/monitor/docs/用户手册.md file:///home/admin/workspace/monitor/docs/技术方案.md
+After=network.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/workspace/monitor
+ExecStart=/usr/bin/node /home/admin/workspace/monitor/server.js
+# 登录 shell 注入的 NODE_OPTIONS 含 --use-system-ca，本机 node 不认；
+# 这里整体覆盖掉它，同时把堆上限从继承来的 8192 收到 96M（机器只有 1.6G）。
+Environment=NODE_OPTIONS=--max-old-space-size=96
+Environment=MONITOR_HOST=127.0.0.1
+Environment=MONITOR_PORT=3000
+Environment=MONITOR_INTERVAL=5000
+Restart=always
+RestartSec=3
+MemoryMax=200M
+TasksMax=64
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+ReadWritePaths=/home/admin/workspace/monitor/data
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+{
+  "name": "ProcBeat — 服务器监控",
+  "short_name": "服务器监控",
+  "description": "本机 CPU / 内存 / 负载 / 磁盘 实时与历史曲线",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

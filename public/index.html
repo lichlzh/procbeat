@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<link rel="icon" href="./icon.svg">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>ProcBeat · 服务器监控</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="bar">
+  <div class="bar-left">
+    <h1>服务器监控</h1>
+    <span id="live" class="dot" title="实时状态"></span>
+  </div>
+  <nav class="seg" id="ranges" aria-label="时间范围">
+    <button data-range="1h" class="on">1h</button>
+    <button data-range="6h">6h</button>
+    <button data-range="24h">24h</button>
+    <button data-range="7d">7d</button>
+  </nav>
+</header>
+
+<main>
+  <section class="cards">
+    <div class="card">
+      <div class="card-k">CPU</div>
+      <div class="card-v" id="v-cpu">—</div>
+      <div class="card-s" id="s-cpu">每核 —</div>
+    </div>
+    <div class="card">
+      <div class="card-k">内存</div>
+      <div class="card-v" id="v-mem">—</div>
+      <div class="card-s" id="s-mem">—</div>
+    </div>
+    <div class="card">
+      <div class="card-k">负载</div>
+      <div class="card-v" id="v-load">—</div>
+      <div class="card-s" id="s-load">5m / 15m —</div>
+    </div>
+    <div class="card">
+      <div class="card-k">磁盘 /</div>
+      <div class="card-v" id="v-disk">—</div>
+      <div class="card-s" id="s-disk">—</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>CPU 占用<span class="hint" id="h-cpu"></span></h2>
+    <canvas id="c-cpu" height="150"></canvas>
+  </section>
+
+  <section class="panel">
+    <h2>内存<span class="hint" id="h-mem"></span></h2>
+    <canvas id="c-mem" height="150"></canvas>
+  </section>
+
+  <section class="panel">
+    <h2>平均负载<span class="hint" id="h-load"></span></h2>
+    <canvas id="c-load" height="150"></canvas>
+  </section>
+
+  <section class="panel two">
+    <div>
+      <h2>磁盘使用率<span class="hint" id="h-disk"></span></h2>
+      <canvas id="c-disk" height="130"></canvas>
+    </div>
+    <div>
+      <h2>磁盘 IO<span class="hint" id="h-io"></span></h2>
+      <canvas id="c-io" height="130"></canvas>
+    </div>
+  </section>
+
+  <p class="foot" id="foot">加载中…</p>
+</main>
+
+<script src="./app.js"></script>
+</body>
+</html>

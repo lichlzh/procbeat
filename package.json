@@ -1,0 +1,15 @@
+{
+  "name": "procbeat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "零依赖的单机指标面板：Node 标准库读 /proc，5 秒采样，JSONL 落盘，手写 Canvas 图表。不用 npm install，也没有构建步骤。",
+  "license": "MIT",
+  "scripts": {
+    "start": "./monitor.sh start",
+    "status": "./monitor.sh status"
+  },
+  "engines": {
+    "node": ">=18.15"
+  }
+}

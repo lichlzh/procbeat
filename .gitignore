@@ -1,0 +1,12 @@
+# 运行时产物：绝不入库
+/data/
+/.monitor.pid
+*.log
+
+# 本机部署实例的备份（nginx 接入流程留下的 .bak / .removed-* 也不该进仓库）
+*.bak
+*.bak-*
+*.removed-*
+
+node_modules/
+.DS_Store
