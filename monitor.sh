@@ -27,7 +27,7 @@ usage() {
     echo "  restart   - 重启服务"
     echo "  status    - 查看运行状态与最新指标"
     echo "  logs      - 查看日志（logs -f 持续跟踪）"
-    echo "  selftest  - 跑采集算法自检（用合成 /proc，不需要压机器）"
+    echo "  selftest  - 跑自检：采集算法 + 前端纵轴边界（都不需要压机器）"
     exit 1
 }
 
@@ -117,7 +117,7 @@ case "$1" in
     ;;
 
   selftest)
-    node "$DIR/selftest.js"
+    node "$DIR/selftest.js" && node "$DIR/axistest.js"
     ;;
 
   *)

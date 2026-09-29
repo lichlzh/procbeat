@@ -38,6 +38,7 @@ server.js         定时采样 -> 落盘 + 内存留最新一份；对外只提�
 sampler.js        读 /proc/stat、meminfo、loadavg、diskstats 与 statfs
 store.js          JSONL 落盘、每分钟聚合、7 天淘汰、抽稀查询
 selftest.js       采集算法自检（合成 /proc 夹具，不需要压机器）
+axistest.js       图表纵轴自检（node:vm 加载真实 app.js + canvas 桩，不需要浏览器）
 seed.js           生成 7 天合成历史，供验证查询路径用
 monitor.sh        install|start|stop|restart|status|logs|selftest
 monitor.service   systemd unit
@@ -53,7 +54,7 @@ data/             raw/ 5 秒原始点，agg/ 1 分钟聚合
 ./monitor.sh start      # 没装 unit 时用 nohup 起，PID 记在 .monitor.pid
 ./monitor.sh install    # 装成 systemd 服务并开机自启（需要 sudo）
 ./monitor.sh status     # 运行状态 + 最新指标 + 数据目录占用
-./monitor.sh selftest   # 12 项采集算法自检
+./monitor.sh selftest   # 自检：采集算法 12 项 + 图表纵轴 11 项，都不需要压机器
 ```
 
 第一次采样只能建立差值基准，所以启动后约 5 秒内 `/api/current` 会返回 `{"error":"warming up"}`。
@@ -73,7 +74,7 @@ data/             raw/ 5 秒原始点，agg/ 1 分钟聚合
   自己每次发布写的回滚点，别替它清理。
 
 上线时的验证矩阵（12 项算法自检、与 `free`/`df`/`loadavg` 对表、抽稀边界、重启去重、
-淘汰边界、nginx 7 项断言）与**未验证项**记录在 `docs/技术方案.md` §10。
+淘汰边界、nginx 7 项断言、前端 11 项纵轴断言）与**未验证项**记录在 `docs/技术方案.md` §10。
 
 ## 以后新增别的项目怎么办
 
