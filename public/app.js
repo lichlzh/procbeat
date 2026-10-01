@@ -163,7 +163,8 @@ function setCard(id, value, sub, level) {
 function renderCards(c) {
   if (c.cpu?.cores?.length) state.cores = c.cpu.cores.length;
   const cores = state.cores || c.cpu?.cores?.length || 0;
-  setCard('cpu', fmtPct(c.cpu?.total), c.cpu?.cores?.length ? `每核 ${c.cpu.cores.map((v) => v.toFixed(0)).join(' / ')}` : '每核 —',
+  // 每核数字各自带 %：`每核 3 / 4` 会被读成分数。
+  setCard('cpu', fmtPct(c.cpu?.total), c.cpu?.cores?.length ? `每核 ${c.cpu.cores.map((v) => `${v.toFixed(0)}%`).join(' / ')}` : '每核 —',
     c.cpu?.total >= 90 ? 'bad' : c.cpu?.total >= 70 ? 'warn' : '');
 
   const m = c.mem;
