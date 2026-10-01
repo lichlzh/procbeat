@@ -1,5 +1,6 @@
-// 前端图表的纵轴边界自检。本机没有浏览器，所以用 node:vm 加载**真实的** public/app.js，
-// 把 canvas 换成桩、抓住写进画布的刻度文本，断言边界与刻度位置。
+// 前端的无浏览器自检。本机没有浏览器，所以用 node:vm 加载**真实的** public/app.js，
+// canvas 与 DOM 元素换成桩：一边抓写进画布的刻度文本断言纵轴边界，一边抓卡片小字的
+// textContent 断言"核数变了该怎么显示"这段逻辑。
 // 运行：node axistest.js（或 ./monitor.sh selftest，会连采集算法一起跑）
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -21,14 +22,25 @@ const ctx = new Proxy({}, {
   },
   set() { return true; },
 });
-const canvas = {
-  clientWidth: 400, width: 0, height: 0, style: {}, children: [],
-  getContext: () => ctx, parentElement: { clientWidth: 400 },
-  addEventListener() {}, classList: { toggle() {} }, dataset: {},
+// 元素桩按 id 分组：drawChart 要 canvas，setCard 要普通节点，两者都从 getElementById 拿。
+// 只有一个共用桩的话，就分不清"这段文字到底写进了哪个元素"。
+const els = new Map();
+const el = (id) => {
+  if (!els.has(id)) {
+    const e = {
+      clientWidth: 400, width: 0, height: 0, style: {}, children: [], dataset: {},
+      textContent: '', classList: { toggle() {} }, getContext: () => ctx,
+      addEventListener() {}, appendChild() {},
+    };
+    e.parentElement = { clientWidth: 400, children: [], classList: { toggle() {} } };
+    els.set(id, e);
+  }
+  return els.get(id);
 };
+const canvas = el('c-cpu');
 const sandbox = {
   window: { devicePixelRatio: 3, addEventListener() {} },
-  document: { documentElement: {}, getElementById: () => canvas, addEventListener() {} },
+  document: { documentElement: {}, getElementById: el, addEventListener() {} },
   getComputedStyle: () => ({ getPropertyValue: () => '#fff' }),
   matchMedia: () => ({ addEventListener() {} }),
   setInterval: () => 0, clearInterval() {}, setTimeout: () => 0, clearTimeout() {},
@@ -40,6 +52,11 @@ vm.runInContext(src, sandbox);
 
 const drawChart = sandbox.drawChart;
 const CHARTS = sandbox.__exports.CHARTS;
+// 函数声明会挂到 vm 的 global 上，直接取来测；取不到说明 app.js 那边改名或内联了，
+// 宁可在这里失败，也不要留一组静悄悄不执行的断言。
+const { coreSummary, renderCards } = sandbox;
+assert.equal(typeof coreSummary, 'function', 'app.js 里没有 coreSummary，这段断言要跟着改');
+assert.equal(typeof renderCards, 'function', 'app.js 里没有 renderCards，这段断言要跟着改');
 const series = (values) => [{ name: 'x', unit: '', points: values.map((v, i) => [1790000000000 + i * 30000, v]) }];
 // 只取 y 轴那一列文字（x < 40 落在左边距里），按绘制顺序 lo → hi
 const axis = (metric, values) => {
@@ -97,4 +114,25 @@ for (const m of ['cpu', 'disk', 'mem', 'io', 'load']) {
   });
 }
 
-console.log(`\n全部通过：${n} 项纵轴断言`);
+// 本机只有 2 核，核多时的文案没法用眼睛验，只能走真实函数。
+console.log('卡片小字：核少逐个列，核多只报最高那根（不让一行字把卡片撑高）');
+check('2 核逐个列，每个数自带 %', () =>
+  assert.equal(coreSummary([11.1, 9.3]), '每核 11% / 9%'));
+check('6 核（阈值内）仍是全列表', () =>
+  assert.equal(coreSummary([1, 2, 3, 4, 5, 92.4]), '每核 1% / 2% / 3% / 4% / 5% / 92%'));
+check('7 核起改汇总，报最大的那根', () =>
+  assert.equal(coreSummary([1, 2, 3, 4, 5, 6, 92.4]), '每核 7 核 · 最高 92%(cpu6)'));
+check('最大的在中间也要挑出来', () =>
+  assert.equal(coreSummary([1, 99.6, 3, 4, 5, 6, 7, 8]), '每核 8 核 · 最高 100%(cpu1)'));
+check('64 核的文案长度有界，不随核数线性变长', () => {
+  const s = coreSummary(Array.from({ length: 64 }, (_, i) => i % 101));
+  assert.ok(s.length <= 26, `实际 ${s.length} 字符：${s}`);
+  assert.ok(!s.includes(' / '), `汇总里不该再有全列表：${s}`);
+});
+check('renderCards 把这段文字写进了 #s-cpu', () => {
+  els.clear();
+  renderCards({ cpu: { total: 10.1, cores: [11.1, 9.3] }, mem: null, load: null, disk: null });
+  assert.equal(el('s-cpu').textContent, '每核 11% / 9%');
+});
+
+console.log(`\n全部通过：${n} 项前端断言`);

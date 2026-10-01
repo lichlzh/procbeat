@@ -160,11 +160,24 @@ function setCard(id, value, sub, level) {
   card.classList.toggle('bad', level === 'bad');
 }
 
+// 卡片小字的位置很窄：320px 屏上两列布局每格只有 ~119px，一个两位数带 `%` 和分隔符约 30px。
+// 所以核数少就逐个列出来（全三位数时 6 根仍在两行内，第 7 根就进第三行，和内存卡片那行齐平），
+// 核多就只报最高的一根——16 核全列出来是 5 行，卡片高度会被这行字撑得比谁都不规整。
+// 逐核曲线在 1h 图里本来就有，卡片只需要回答"有没有哪根核被顶满、是哪一根"。
+const CORE_LIST_MAX = 6;
+function coreSummary(cores) {
+  const pct = (v) => `${v.toFixed(0)}%`;
+  if (cores.length <= CORE_LIST_MAX) return `每核 ${cores.map(pct).join(' / ')}`;
+  let hi = 0;
+  for (let i = 1; i < cores.length; i++) if (cores[i] > cores[hi]) hi = i;
+  return `每核 ${cores.length} 核 · 最高 ${pct(cores[hi])}(cpu${hi})`;
+}
+
 function renderCards(c) {
   if (c.cpu?.cores?.length) state.cores = c.cpu.cores.length;
   const cores = state.cores || c.cpu?.cores?.length || 0;
   // 每核数字各自带 %：`每核 3 / 4` 会被读成分数。
-  setCard('cpu', fmtPct(c.cpu?.total), c.cpu?.cores?.length ? `每核 ${c.cpu.cores.map((v) => `${v.toFixed(0)}%`).join(' / ')}` : '每核 —',
+  setCard('cpu', fmtPct(c.cpu?.total), c.cpu?.cores?.length ? coreSummary(c.cpu.cores) : '每核 —',
     c.cpu?.total >= 90 ? 'bad' : c.cpu?.total >= 70 ? 'warn' : '');
 
   const m = c.mem;
